@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Climate Gamers. Videojuego Power: Salva el Planeta</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        touch-action: none;
+      }
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 145, 63, 0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+        color: white;
+        font-family: "Luckiest Guy", cursive;
+        text-align: center;
+        padding: 20px;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 4em;
+        margin-bottom: 10px;
+        color: #ffeb3b;
+        text-shadow: 6px 6px 0px #000;
+      }
+      p {
+        font-size: 1.5em;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 0px #000;
+        max-width: 600px;
+      }
+      #start-btn {
+        padding: 20px 50px;
+        font-size: 28px;
+        cursor: pointer;
+        background: #ff4b4b;
+        border: 5px solid white;
+        color: white;
+        border-radius: 20px;
+        box-shadow: 6px 6px 0px #000;
+        transition: all 0.1s;
+        font-family: inherit;
+      }
+      #start-btn:active {
+        transform: scale(0.95);
+        box-shadow: 0px 0px 0px #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="overlay">
+      <h1>¡SALVA EL PLANETA!</h1>
+      <p>Mueve el planeta para recoger objetos sostenibles</p>
+      <button id="start-btn">¡JUGAR!</button>
+    </div>
+
+    <a-scene background="color: #00913F">
+      <a-assets>
+        <a-asset-item
+          id="mod-jugador"
+          src="earth-like_planet.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-planta"
+          src="potted_plant.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-molino"
+          src="torre_o_turbina_de_energia_eolica.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-bici"
+          src="city_bicycle.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-zanahoria"
+          src="cartoon_carrot_free_standard.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-coche"
+          src="the-red-car.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-petroleo"
+          src="oil_barrel.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-patatas"
+          src="french_fried_potatoes.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+        <a-asset-item
+          id="mod-botella"
+          src="plastic_bottle.glb"
+          crossorigin="anonymous"
+        ></a-asset-item>
+
+        <audio
+          id="musica-fondo"
+          src="jeussfl2009-music-for-games-153673.mp3"
+          crossorigin="anonymous"
+        ></audio>
+        <audio
+          id="sonido-exito"
+          src="floraphonic-arcade-ui-17-229515.mp3"
+          crossorigin="anonymous"
+        ></audio>
+        <audio
+          id="sonido-fallo"
+          src="lesiakower-error-mistake-sound-effect-incorrect-answer-437420.mp3"
+          crossorigin="anonymous"
+        ></audio>
+      </a-assets>
+
+      <a-entity
+        id="musica-ent"
+        sound="src: #musica-fondo; loop: true; volume: 0.4"
+      ></a-entity>
+      <a-entity
+        id="audio-exito"
+        sound="src: #sonido-exito; volume: 1"
+      ></a-entity>
+      <a-entity
+        id="audio-fallo"
+        sound="src: #sonido-fallo; volume: 1"
+      ></a-entity>
+
+      <a-entity
+        cursor="rayOrigin: mouse"
+        raycaster="objects: .clickable"
+      ></a-entity>
+      <a-entity camera position="0 5 10"></a-entity>
+      <a-light type="ambient" intensity="1.2"></a-light>
+
+      <a-image
+        src="power-logo-wt.png"
+        position="11 15 -5"
+        width="3"
+        height="0.9"
+        scale="2 2 2"
+      ></a-image>
+
+      <a-text
+        id="score"
+        value="Puntos: 0"
+        position="-7 8 -5"
+        color="white"
+        width="10"
+        scale="2 2 2"
+        font="mozillavr"
+      >
+      </a-text>
+      <a-text
+        id="timer"
+        value="Tiempo: 20"
+        position="3 8 -5"
+        color="#222"
+        width="10"
+        scale="2 2 2"
+        font="mozillavr"
+      >
+      </a-text>
+
+      <a-text
+        id="countdown-text"
+        value=""
+        align="center"
+        position="0 5 -5"
+        color="#FFD700"
+        scale="18 18 18"
+        visible="false"
+        font="mozillavr"
+      ></a-text>
+
+      <a-entity id="game-over-screen" visible="false" position="0 5 -5">
+        <a-text
+          id="final-score"
+          value=""
+          align="center"
+          color="#FFEB3B"
+          width="20"
+          position="0 2 0"
+          font="mozillavr"
+        ></a-text>
+        <a-box
+          id="reset-btn"
+          position="0 -1.5 0"
+          width="6.5"
+          height="2.2"
+          depth="0.2"
+          color="#FF4B4B"
+          class="clickable"
+        >
+          <a-text
+            value="REINTENTAR"
+            align="center"
+            position="0 0 0.15"
+            width="16"
+            color="white"
+            font="mozillavr"
+          ></a-text>
+        </a-box>
+      </a-entity>
+
+      <a-plane
+        position="0 0 -30"
+        width="200"
+        height="100"
+        src="Gemini_Generated_Image_u1ees1u1ees1u1ee.png"
+      ></a-plane>
+      <a-plane
+        position="0 0 0"
+        rotation="-90 0 0"
+        width="30"
+        height="10"
+        src="espiral.png"
+      ></a-plane>
+
+      <a-entity
+        id="player"
+        gltf-model="#mod-jugador"
+        position="0 1 0"
+        rotation="0 270 0"
+        scale="1 1 1"
+      ></a-entity>
+
+      <script>
+        let score = 0;
+        let timeLeft = 20;
+        let gameActive = false;
+        let isCounting = false;
+        let boxSpawner, gameTimer;
+        let lastTime = performance.now();
+
+        const player = document.querySelector("#player");
+        const scene = document.querySelector("a-scene");
+        const musica = document.querySelector("#musica-ent");
+        const countdownText = document.querySelector("#countdown-text");
+
+        const configObjetos = [
+          { model: "#mod-planta", puntos: 1, escala: "1.5 1.5 1.5" },
+          { model: "#mod-molino", puntos: 1, escala: "0.3 0.3 0.3" },
+          { model: "#mod-bici", puntos: 1, escala: "2 2 2" },
+          { model: "#mod-zanahoria", puntos: 1, escala: "2 2 2" },
+          { model: "#mod-coche", puntos: -2, escala: "1.5 1.5 1.5" },
+          { model: "#mod-petroleo", puntos: -2, escala: "2 2 2" },
+          { model: "#mod-patatas", puntos: -2, escala: "2 2 2" },
+          { model: "#mod-botella", puntos: -2, escala: "0.2 0.2 0.2" },
+        ];
+
+        function handleMove(e) {
+          if (!gameActive) return;
+          if (e.type === "touchmove") e.preventDefault();
+          let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          let percentX = (clientX / window.innerWidth) * 2 - 1;
+          let targetX = percentX * 12;
+          if (targetX < -10) targetX = -10;
+          if (targetX > 10) targetX = 10;
+          player.setAttribute("position", { x: targetX, y: 1, z: 0 });
+        }
+
+        window.addEventListener("mousemove", handleMove);
+        window.addEventListener("touchmove", handleMove, { passive: false });
+
+        function initiateGame() {
+          if (isCounting || gameActive) return;
+          isCounting = true;
+          document.querySelector("#overlay").style.display = "none";
+          document
+            .querySelector("#game-over-screen")
+            .setAttribute("visible", "false");
+          document.querySelector("#reset-btn").classList.remove("clickable");
+          musica.components.sound.playSound();
+
+          let count = 3;
+          countdownText.setAttribute("visible", "true");
+          countdownText.setAttribute("value", count);
+          countdownText.setAttribute("color", "#FFD700");
+
+          let timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+              countdownText.setAttribute("value", count);
+            } else if (count === 0) {
+              countdownText.setAttribute("value", "¡YA!");
+              countdownText.setAttribute("color", "#FFFFFF");
+            } else {
+              clearInterval(timer);
+              countdownText.setAttribute("visible", "false");
+              isCounting = false;
+              startGameLogic();
+            }
+          }, 1000);
+        }
+
+        function startGameLogic() {
+          score = 0;
+          timeLeft = 20;
+          gameActive = true;
+          lastTime = performance.now();
+          document.querySelector("#score").setAttribute("value", `Puntos: 0`);
+          document.querySelector("#timer").setAttribute("value", `Tiempo: 20`);
+
+          gameTimer = setInterval(() => {
+            timeLeft--;
+            document
+              .querySelector("#timer")
+              .setAttribute("value", `Tiempo: ${timeLeft}`);
+            if (timeLeft <= 0) endGame();
+          }, 1000);
+
+          boxSpawner = setInterval(() => {
+            if (!gameActive) return;
+            const obj = document.createElement("a-entity");
+            const conf =
+              configObjetos[Math.floor(Math.random() * configObjetos.length)];
+            const posX = Math.random() * 18 - 9;
+            obj.setAttribute("gltf-model", conf.model);
+            obj.setAttribute("position", `${posX} 12 -0.2`);
+            obj.setAttribute("class", "falling-obj");
+            obj.setAttribute("data-points", conf.puntos);
+            obj.setAttribute("scale", conf.escala);
+            scene.appendChild(obj);
+          }, 350);
+        }
+
+        function endGame() {
+          gameActive = false;
+          clearInterval(gameTimer);
+          clearInterval(boxSpawner);
+          document
+            .querySelector("#final-score")
+            .setAttribute("value", `FIN DEL JUEGO\nTotal: ${score} Puntos`);
+          document
+            .querySelector("#game-over-screen")
+            .setAttribute("visible", "true");
+          setTimeout(
+            () =>
+              document.querySelector("#reset-btn").classList.add("clickable"),
+            500
+          );
+          document
+            .querySelectorAll(".falling-obj")
+            .forEach((el) => el.remove());
+        }
+
+        function loop(time) {
+          const dt = time - lastTime;
+          lastTime = time;
+          if (gameActive) {
+            document.querySelectorAll(".falling-obj").forEach((obj) => {
+              let pos = obj.getAttribute("position");
+              let safeDt = dt > 100 ? 16 : dt;
+              pos.y -= safeDt * 0.012;
+              obj.setAttribute("position", pos);
+
+              let pPos = player.getAttribute("position");
+              if (
+                Math.abs(pos.y - pPos.y) < 1 &&
+                Math.abs(pos.x - pPos.x) < 2
+              ) {
+                const pts = parseInt(obj.getAttribute("data-points"));
+                score += pts;
+                document
+                  .querySelector(pts > 0 ? "#audio-exito" : "#audio-fallo")
+                  .components.sound.playSound();
+                document
+                  .querySelector("#score")
+                  .setAttribute("value", `Puntos: ${score}`);
+                obj.remove();
+              } else if (pos.y < -2) {
+                obj.remove();
+              }
+            });
+          }
+          requestAnimationFrame(loop);
+        }
+
+        document
+          .querySelector("#start-btn")
+          .addEventListener("click", initiateGame);
+        document
+          .querySelector("#reset-btn")
+          .addEventListener("click", initiateGame);
+        requestAnimationFrame(loop);
+      </script>
+    </a-scene>
+  </body>
+</html>
